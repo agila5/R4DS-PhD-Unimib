@@ -1,0 +1,48 @@
+---
+title: "R for Data Science - Syllabus"
+author: "Andrea Gilardi"
+date: last-modified
+date-format: "[Last modified on:] YYYY-MM-DD"
+institute: "University of Milano Bicocca - DEMS"
+format:
+  pdf: 
+    cite-method: biblatex
+    geometry:
+      - top=30mm
+      - left=20mm
+      - heightrounded
+    biblatexoptions: [style=authoryear-comp, maxcitenames=1, uniquelist=false, sorting=ynt]
+page-layout: full
+bibliography: syllabus-refs.bib
+nocite: |
+  @*
+---
+
+The objective of this course is to introduce the students to effective and modern tools for data analysis, version control, and development of R packages. All the materials for the lessons can be found at the following link: <https://github.com/agila5/R4DS-PhD-Unimib> (work in progress). 
+
+# (Tentative) Program
+
+ We will cover the following topics. 
+
+1. The `tidyverse` and some of its most important packages for data manipulation (such as `dplyr`, `tidyr` and `purrr`) (4h) [@wickham2023r; @wickham2019welcome]; 
+1. Debugging techniques provided by R and Rstudio (e.g. `debug()`, `browser()`, `traceback()`), and `try()`/`tryCatch()`. We will also explore conditions (see `?conditions`) and define a simple manual mechanism to deal with errors and warnings (2h) [@wickham2019advanced];
+1. Git and Github: After creating our first github project, we will explore the most important `git` commands (e.g. `clone`, `status`, `push`, `pull`, `merge`, `diff`, ...) either via the shell or an R package (e.g. `usethis`) (2h) [@bryan2023happy];
+1. R packages (2h): We will create our first R package and discuss the most important aspects (e.g. Imports vs Depends vs Suggests or documentation). Finally, I will show you how to upload that R package on github and present the most important tools for collaborative package development (issues, comments, and PR) (2h) [@wickham2023rpackages];
+1. TBD (2h). 
+
+# (Tentative) Schedule
+
+The lessons will be held in presence at the DEMS seminar room U7-2104 according to the following (preliminary) calendar: 
+
+- Friday, March 17th, 16-18;
+- Tuesday, March 21st, 14-16;
+- Thursday, March 23rd, 14-16;
+- Monday, March 27th, 14-16;
+- Tuesday, March 28th, 15-17;
+- Wednesday, April 5th, 14-16.
+
+**Please notice that we are going to have class in a seminar room. Therefore, the students are kindly requested to bring their own laptop to enjoy hands-on coding sessions. Moreover, please try to install [R](https://cran.rstudio.com/) and [Rstudio](https://posit.co/download/rstudio-desktop/) before the beginning of the lessons. Any version of those two software is ok. If you have any doubt, feel free to contact me (`andrea.gilardi@unimib.it`).**
+
+# Prerequisites
+
+The students are expected to be already familiar with the basics of computer programming (e.g. for-loops, if-clauses, ...) and the R language. If you want to briefly recall the most important topics, I would recommend reading the first few chapters of @de2013r. 
