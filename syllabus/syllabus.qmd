@@ -46,3 +46,5 @@ The lessons will be held in presence at the DEMS seminar room U7-2104 according 
 # Prerequisites
 
 The students are expected to be already familiar with the basics of computer programming (e.g. for-loops, if-clauses, ...) and the R language. If you want to briefly recall the most important topics, I would recommend reading the first few chapters of @de2013r. 
+
+\newrefcontext[sorting=nty]
