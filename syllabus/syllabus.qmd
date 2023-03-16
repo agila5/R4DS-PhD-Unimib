@@ -28,7 +28,7 @@ The objective of this course is to introduce the students to effective and moder
 1. Debugging techniques provided by R and Rstudio (e.g. `debug()`, `browser()`, `traceback()`), and `try()`/`tryCatch()`. We will also explore conditions (see `?conditions`) and define a simple manual mechanism to deal with errors and warnings (2h) [@wickham2019advanced];
 1. Git and Github: After creating our first github project, we will explore the most important `git` commands (e.g. `clone`, `status`, `push`, `pull`, `merge`, `diff`, ...) either via the shell or an R package (e.g. `usethis`) (2h) [@bryan2023happy];
 1. R packages (2h): We will create our first R package and discuss the most important aspects (e.g. Imports vs Depends vs Suggests or documentation). Finally, I will show you how to upload that R package on github and present the most important tools for collaborative package development (issues, comments, and PR) (2h) [@wickham2023rpackages];
-1. TBD (2h). 
+1. Elements of Object-Oriented (OO) programming with R [@wickham2019advanced] applied to R packages development (2h). We will focus on the S3 system.
 
 # (Tentative) Schedule
 
@@ -46,5 +46,14 @@ The lessons will be held in presence at the DEMS seminar room U7-2104 according 
 # Prerequisites
 
 The students are expected to be already familiar with the basics of computer programming (e.g. for-loops, if-clauses, ...) and the R language. If you want to briefly recall the most important topics, I would recommend reading the first few chapters of @de2013r. 
+
+# Final exam
+
+The students will be divided into two groups, each one consisting of at least two people. The two groups are expected to work together to develop a project that consists of two parts: 
+
+1. Exploratory Data Analysis (EDA) with the Tidyverse. You will be required to analyse a given dataset and answer a set of questions;
+1. create an R package that answers a simple statistical problem, providing the necessary testing and documentation. The R package must be published on Github and it will be reviewed following the guidelines of the rOpenSci community: <https://github.com/ropensci/software-review>. 
+
+The detailed assignments for the two parts will be uploaded on the webpage of the course before the end of the term. More details will be provided during the classes. 
 
 \newrefcontext[sorting=nty]
