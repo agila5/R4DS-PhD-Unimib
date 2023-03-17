@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 notes.txt
+*.aux
+*.log
+*.nav
+*.snm
+*.synctex.gz
+*.toc
