@@ -154,7 +154,7 @@ The examples are taken from \url{https://rstats.wtf/}. Another course on similar
 \begin{itemize}
 \itemsep 3ex
 \item By default, when you terminate an R session, the software asks you if you want to save the current workspace. 
-\item Similarly, the R startup mechanism\footnote{See also \texttt{?Startup} and \texttt{?quit} for more details.} loads a saved image of the user workspace (i.e. a \texttt{.Rdata} file) if there is one. 
+\item Similarly, the R startup mechanism\footnote{See also \texttt{?Startup} and \texttt{?quit} for more details.} loads a saved image of the user workspace (i.e. an \texttt{.Rdata} file) if there is one. 
 \item Unfortunately, this behaviour might be really dangerous, especially if you don't remember how the saved objects were generated. Citing the Python's style guide PEP20: \textit{Explicit is better than implicit}.  
 \end{itemize}
 \end{frame}
@@ -165,6 +165,7 @@ The examples are taken from \url{https://rstats.wtf/}. Another course on similar
 \centering
 \includegraphics[width=\linewidth]{figures/rihanna.jpg}
 \end{figure}
+Source: \url{https://rstats.wtf/}
 \end{frame}
 
 \begin{frame}{So what can I do?}
@@ -213,7 +214,7 @@ The examples are taken from \url{https://rstats.wtf/}. Another course on similar
 \itemsep 3ex
 \item Why do we usually run \texttt{setwd(...)}? Because we want to specify the "relative" path of a file according to a directory. 
 \item Unfortunately, \texttt{setwd(...)} may raise several portability issues as seen before. 
-\item The \href{https://here.r-lib.org/}{\texttt{here}} \emoji{package} provides a convenient way to perform the same operation without manual interventions and the aforementioned drawbacks $\Longrightarrow$ Practice safe ``paths""! 
+\item The \href{https://here.r-lib.org/}{\texttt{here}} \emoji{package} provides a convenient way to perform the same operation without manual interventions and the aforementioned drawbacks $\Longrightarrow$ Practice safe ``paths"! 
 \item Let's see an example and more details!
 \end{itemize}
 \end{frame}
