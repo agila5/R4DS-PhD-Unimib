@@ -8,7 +8,7 @@ set.seed(1)
 rnorm(1)
 
 # Now, let's load an .Rdata file
-load("01-tidyverse/.Rdata") # (nothing happens ?!)
+load("01-tidyverse/.Rdata2") # (nothing happens ?!)
 
 # but
 set.seed(1)
