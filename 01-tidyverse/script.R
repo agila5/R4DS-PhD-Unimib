@@ -7,6 +7,9 @@
 set.seed(1)
 rnorm(1)
 
+set.seed(1)
+rnorm(1)
+
 # Now, let's load an .Rdata file
 load("01-tidyverse/.Rdata2") # (nothing happens ?!)
 
@@ -27,24 +30,27 @@ set.seed(1)
 rnorm(1)
 
 # EXERCISE FOR HOME: Try to understand what happens after loading
-# "01-tidyverse.Rdata". Could you guess what's the problem behind the previous
-# example? At the end of the course we may also see a similar example involving
-# a different and more subtle problem involving environments.
+# "01-tidyverse.Rdata". Could you guess what's the problem underneath the
+# previous example? At the end of the course we may also see a similar example
+# involving a different and more subtle problem involving environments.
 
 # 3. Rstudio projs and safe paths -----------------------------------------
 
 # First, let's create a new Rstudio Project and switch back into this project.
 
 # Now, thanks to the here package, we can easily define the path of all files
-# inside this project. For example:
+# inside this project relative to the home. For example:
 library(here)
 here("01-tidyverse", "script.R")
 
-# NB: The function is not testing that the file exists, it is just creating a
-# path:
+# NB: The here() function is not testing that the file exists, it is just
+# creating a path:
 here("01-tidyverse", "whatever.txt")
 
-# But how can the package define the "working directory"?
+# but
+file.exists(here("01-tidyverse", "whatever.txt"))
+
+# How does the package determine the "working directory"?
 dr_here()
 
 # 4. The tidyverse --------------------------------------------------------
@@ -60,7 +66,7 @@ conflict_prefer("filter", "dplyr", "stats")
 
 # > 4.1 dplyr basics ------------------------------------------------------
 
-# First, let's download the dataset of car accidents:
+# First, let's download the dataset of UK's car accidents:
 if (!file.exists(here::here("01-tidyverse", "data", "accidents.csv"))) {
   download.file(
     url = "https://data.dft.gov.uk/road-accidents-safety-data/dft-road-casualty-statistics-accident-2021.csv",
@@ -73,7 +79,7 @@ if (!file.exists(here::here("01-tidyverse", "data", "accidents.csv"))) {
 accidents <- read_csv(file = here::here("01-tidyverse", "data", "accidents.csv"))
 
 # NB: read_csv is a function defined in the readr package. It is a slightly
-# faster version than read.csv with a few additional benefits (a consistent
+# faster version than read.csv with a few additional benefits (i.e. a consistent
 # naming scheme, a progress bar and automatic date/time parsing). See
 # https://readr.tidyverse.org/articles/readr.html for more details.
 
@@ -84,6 +90,8 @@ accidents <- read_csv(file = here::here("01-tidyverse", "data", "accidents.csv")
 # accident.csv (description of each car accident)
 # casualty.csv (description of each casualty for the car accidents)
 # vehicles.csv (description of each vehicle involved in the accidents)
+
+# plus a .xlsx file that works as a lookup table.
 
 # The three datasets are linked by several IDs.
 
@@ -115,7 +123,7 @@ filter(accidents, accident_year != 2021)
 # can be used to select the observations that satisfy a series of conditions
 # according to the following syntax: filter(data, cond1, cond2, cond3, ...). The
 # conditions (which must evaluate to a logical value) are concatenated and we
-# retain only the observations that satisfy all of them.
+# retain only the records that satisfy all of them.
 
 # For example
 filter(accidents, speed_limit > 30, day_of_week == 1)
@@ -124,7 +132,7 @@ filter(accidents, speed_limit > 30, day_of_week == 1)
 # greater than 30.
 
 # NB: The dplyr verbs are implemented using the so called non-standard
-# evaluation (NSE), which implies we do not need the "" to refer to our
+# evaluation (NSE), which implies we do not need the " to refer to our
 # variables. We do not add more details here and I just refer you to
 # https://dplyr.tidyverse.org/articles/programming.html
 
@@ -185,7 +193,7 @@ with(
 # occurred in London on a street where the speed limit is lower or equal than
 # 50 km/h.
 
-# NB1: The following vectors define the geographical bounding box for London
+# NB1: The following vectors define the geographical bounding box for London City.
 xlim_london <- c(503568.2, 561957.5)
 ylim_london <- c(155850.8, 200933.9)
 
@@ -199,21 +207,24 @@ ylim_london <- c(155850.8, 200933.9)
 # If you want to briefly recall the basics of plotting with R, I would suggest
 # reading Chapter 7 of Micheaux et al. (2013).
 
-#  > 4.2 lookup tables and joins ------------------------------------------
-
 # It looks like the next variables represent some additional characteristics of
 # the accidents and it seems that the levels were coded according to some
 # patterns --> we need a lookup table.
 
 # For example
-count(accidents, day_of_week)
+count(accidents, day_of_week) # what is 1?
 
 # or
-count(accidents, accident_severity)
+count(accidents, accident_severity) # what is 1? Is it better or worse than 3?
 
 # As we can see, the count() function can be used to calculate a frequency
 # table. We can also consider bivariate frequencies:
 count(accidents, day_of_week, accident_severity) |> head()
+
+# which is the same as
+with(accidents, table(day_of_week, accident_severity))
+
+# but in a "long" format.
 
 # Following the same pattern as before, we can download the lookup table
 if (!file.exists(here::here("01-tidyverse", "data", "lookup.xlsx"))) {
@@ -228,7 +239,10 @@ if (!file.exists(here::here("01-tidyverse", "data", "lookup.xlsx"))) {
 library(readxl)
 lookup <- read_xlsx(here::here("01-tidyverse", "data", "lookup.xlsx"))
 
-# readxl is an R package to read-in xls/xlsx data. Let's check the output
+# readxl is an R package to read-in xls/xlsx data. See the corresponding webpage
+# for more details.
+
+# Let's check the output
 lookup
 
 # First, we can see that the column names are stored in a really annoying
@@ -239,19 +253,19 @@ library(janitor)
 # See ?janitor::clean_names for more details. I just point out that this is a
 # really convenient function that fixes most common problems with column names.
 
-# The lookup object is a dataframe whose columns describe the fields of the
-# three tables listed before (accidents/vehicles/casualties). In fact, the first
-# field denotes the table type
+# The 'lookup' object is a data structure whose columns describe the fields of
+# the three tables listed before (accidents/vehicles/casualties). In fact, the
+# first field denotes the table type
 count(lookup, table)
 
 # the second field denotes the variable names (repeated as many times as
 # necessary for each unique pair of code_format/label)
-lookup |> filter(table == "Accident") |> count(field_name) |> head()
+lookup |> count(field_name) |> head()
 
 # the third and fourth column properly define the lookup table, for example
 slice(lookup, 8:12)
 
-# and, finally, the note column adds additional information for a given field.
+# and, finally, the 'note' column adds additional information for a given field.
 # For example
 lookup |> slice(4:5) |> select(field_name, note)
 
@@ -264,24 +278,25 @@ slice(lookup, 8:12)
 # same as
 lookup[8:12, ]
 
-# NB: filter() requires a logical condition that must evaluate at TRUE or FALSE,
-# slice() requires IDs of the rows.
+# NB: filter() requires a logical condition that must be evaluated as TRUE or
+# FALSE, slice() requires numeric IDs of the rows.
 
-# The latter subsets the columns:
+# The latter function subsets the columns, either by position
 lookup |> select(c(2, 5)) |> head()
 
-# or
-
+# or by name
 lookup |> select(field_name, note) |> head()
 
-# EXERCISE FOR HOME: Which code was used to identify the "City of London"
-# police_force? How would you determine the row-number for the accidents managed
-# by the "City of London"'s police force? Subset those observations and, after
-# filtering only the events that occurred on Wednesday after 6PM, plot the
-# occurrences. Compare the new with the previous plot.
+# EXERCISE: How would identify the ID associated with "City of London"
+# police_force? And how would you determine the row-number for the accidents
+# managed by the "City of London"'s police force? Subset those observations and,
+# after filtering only the events that occurred on Wednesday after 6PM, plot the
+# occurrences. Compare the new plot with the previous one.
 
 # HINT: The "time" field in the accident database is stored as a "time"-class
 # object. Therefore, using the function named ...
+
+#  > 4.2 lookup tables and joins ------------------------------------------
 
 # During the next class we are going to review inner/outer/semi/left/right join
 # and substitute the placeholder codes into the accident table with their proper
