@@ -111,6 +111,7 @@ glimpse(accidents)
 # Moreover, we can also see that the variable was read as a character despite
 # looking like a numeric. Can you guess why?
 
+# SOLUTION:
 length(unique(accidents[["accident_index"]])) == nrow(accidents)
 anyDuplicated(accidents[["accident_index"]])
 any(duplicated(accidents[["accident_index"]]))
@@ -305,12 +306,16 @@ lookup_table |> select(c(2, 5))
 # or by name
 lookup_table |> select(field_name, note)
 
-# EXERCISE: How would identify the police_force ID associated with the "City of
-# London" police force? And how would you determine the row-number (i.e. the
-# location) of the accidents managed by the "City of London"'s police force?
-# After sub-setting those observations and filtering only the events that
-# occurred on Wednesday after 6PM, create a plot that displays the
-# number_of_casualties variable.
+# How would you identify the IDs associated with the "City of London" police
+# force?
+filter(lookup_table, label == "City of London", field_name == "police_force")
+
+# And how would you determine the row-number (i.e. the location) of the
+# accidents managed by the "City of London"'s police force?
+which(accidents$police_force == 48)
+
+# EXERCISE: After subsetting only the events that occurred on Wednesday after
+# 6PM, create a plot that displays the number_of_casualties variable.
 
 # HINT 1: The "time" field in the accident database is stored as a "time"-class
 # object. Therefore, using the function named ...
@@ -354,22 +359,24 @@ lookup_police_force <- with(
 head(lookup_police_force)
 
 # so that, for example,
-lookup_police_force[c("1", "3")] # labels for IDs 1 and 3
+lookup_police_force[c("1", "1", "3")] # labels for IDs 1 and 3
+
+# See also Section "Character indices" in ?"["
 
 # Now we can replace the numeric IDs with the (more informative) labels by using
-# a named-subset-replacement operation:
+# a named subset operation:
 accidents <- mutate(
   accidents,
   police_force = lookup_police_force[as.character(police_force)]
 )
 
-# Check the result
 accidents |> select(accident_reference, police_force)
 
 # EXERCISE: Replicate the procedure above considering the variable
 # "accident_severity". Bonus points if you can perform the task without checking
 # the previous code. If you are already familiar with this problem, you can also
-# consider a different strategy (i.e. for loops, *appy family, base R code, ...).
+# consider a different programming strategy (i.e. for loops, *appy family, base
+# R code, ...)
 
 # Clean ws
 rm(lookup_police_force, lookup_table_police_force)
@@ -393,7 +400,7 @@ accidents |>
 # label. The most important point here is that we do not want to just manually
 # copy the previous approach K times, but we want to define a generic approach
 # that works automatically for all cases following the DRY (Do not Repeat
-# Yourself) principle.
+# Yourself) principle: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
 # First, we can filter only the relevant observations from the lookup_table
 # (i.e. we retain only the rows pertaining to the variables in the "Accident"
@@ -539,7 +546,7 @@ accidents <- accidents |>
       # Specify which variables we need to modify
       .cols = all_of(categorical_vars),
       # Define a function that will be applied to all columns
-      .fns = my_replace_labels,
+      .fns = my_replace_labels
     )
   )
 
@@ -601,6 +608,6 @@ left_join(casualties, accidents, by = join_by("accident_index"))
 # ID included into the casualties table with the corresponding labels. Then
 # repeat the two join operations.
 
-# As you can imagine, we just scretched the surface of the dplyr
+# As you can imagine, we just scratched the surface of the dplyr
 # functionalities. If you want to read more details, check
 vignette(package = "dplyr")
