@@ -6,7 +6,7 @@
 f1 <- function(x, w = 1) f2(x, w)
 f2 <- function(x, w = 2) f3(x, w)
 f3 <- function(x, w = 3) sum(x) + w
-f1("ABC")
+f1(x = "ABC")
 
 # If you are working in Rstudio, the traceback is automatically printed;
 # otherwise you need to manually call traceback(). As we can see, the traceback
@@ -120,7 +120,8 @@ f3 <- function(x, w = 3) {
   browser()
   sum(x) + w
 }
-f1("ABC") # We do not see an error here but, in any case, we enter into debug mode
+f1(x = "ABC") # We do not see an error here but, in any case, we enter into debug mode
+f1(x = 1)
 
 # Now, let me re-define f3()
 f3 <- function(x, w = 3) {
@@ -136,7 +137,8 @@ f4 <- function() {
   }
   invisible()
 }
-f1("ABC")
+f1(x = "ABC")
+f1(x = 1)
 
 # Let's try the commands n, s, f, c, and Q!
 
