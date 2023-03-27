@@ -9,3 +9,5 @@ notes.txt
 *.snm
 *.synctex.gz
 *.toc
+*.vrb
+03-git/crop.R
