@@ -1,0 +1,13 @@
+---
+title: "R4DS - Exam"
+format: pdf
+page-layout: full
+---
+
+# Instructions
+
+# Exercise 1
+
+# Exercise 2
+
+# Exercise 3
