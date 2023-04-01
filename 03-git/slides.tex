@@ -317,8 +317,7 @@ nothing to commit, working tree clean
 \begin{lstlisting}
 [truncated...]
 Changes not staged for commit:
-(use "git add <file>..." to update what will be committed)
-(use "git restore <file>..." to discard changes in working directory)
+[truncated...]
       |\textcolor{red}{modified:   README.md}|
 
 Untracked files:
@@ -344,7 +343,7 @@ Changes to be committed:
       |\textcolor{green}{modified:   README.md}|
 \end{lstlisting}
 
-\item Now we could run \texttt{git commit -m "\dots"} as before. But what happens if we modified a staged file? Let's add even more text to \texttt{README.md}. 
+\item Now we could run \texttt{git commit -m "\dots"} as before. But what happens if we modify a staged file? Let's add even more text to \texttt{README.md}. 
 \end{itemize}
 \end{frame}
 
@@ -366,7 +365,7 @@ Changes not staged for commit:
 (use "git restore <file>..." to discard changes in working directory)
       |\textcolor{red}{modified:   README.md}|
 \end{lstlisting}
-\item If you commit now, you will preserve the currently staged version of \texttt{README.md}. You can run \texttt{git add README.md} again in case you need to update the file version. 
+\item If you commit now, you will preserve the currently staged version of \texttt{README.md}. You can run \texttt{git add README.md} again in case you need to update the file in the stage. 
 \end{itemize}
 \end{frame}
 
@@ -374,7 +373,7 @@ Changes not staged for commit:
 \vspace{-0.5cm}
 \begin{itemize}
 \itemsep 2ex
-\item The \texttt{git diff} command can be used to see what we changed but not yet staged: 
+\item The \texttt{git diff} command can be used to compare the current version of the tracked files vs the staged ones: 
 \begin{lstlisting}
 $ git diff
 diff --git a/README.md b/README.md
@@ -432,7 +431,7 @@ $ git status
 On branch main
 nothing to commit, working tree clean
 \end{lstlisting}
-\item \textbf{NB:} If you add the \texttt{-a} flag to \texttt{git commit}, then Git automatically stage every file \textbf{that is already tracked} before doing the commit. 
+\item \textbf{NB:} If you add the \texttt{-a} flag to \texttt{git commit}, then Git automatically stage every file \textbf{that is already tracked} before doing the commit. Therefore, you don't need to manually run \texttt{git add <something>}. 
 \end{itemize}
 \end{frame}
 
@@ -440,7 +439,7 @@ nothing to commit, working tree clean
 \vspace{-0.5cm}
 \begin{itemize}
 \itemsep 2ex
-\item A \texttt{.gitignore} file can be used to tell Git not to track certain types of files (e.g. log files). 
+\item A \texttt{.gitignore} file can be used to force Git not to track certain types of files (e.g. log files). 
 \item Let's create an \texttt{example.log} file inside our repo. We see 
 \begin{lstlisting}
 $ git status
@@ -472,7 +471,7 @@ nothing added to commit but untracked files present (use "git add" to track)
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{I f*ucked up \emoji{loudly-crying-face} \texttt{--amend}!}
+\begin{frame}[fragile]{I f*cked up \emoji{loudly-crying-face} \texttt{--amend}!}
 \vspace{-0.5cm}
 \begin{itemize}
 \itemsep 2ex
@@ -495,20 +494,20 @@ $ git commit --amend -m "the right text now!"
 \begin{itemize}
 \itemsep 2ex
 \item As we saw from the previous messages, \texttt{git restore --staged <file>} can be used to unstage a file. We can test it by modifying the \texttt{.gitignore file} explicitly forcing Git to ignore \texttt{.Rdata} files (see Unit 1!).
-\item Similarly, \texttt{git restore <file>} can be used to discard unstaged changes so that a file looks like when we last committed it! Let's remove the \texttt{.Rdata} string from \texttt{.gitignore}. 
+\item Similarly, \texttt{git restore <file>} can be used to discard unstaged changes so that a file looks like exactly the same as when we last committed it! Let's remove the \texttt{.Rdata} from \texttt{.gitignore}. 
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Other commands}
 \vspace{-0.5cm}
-As you can imagine, there are several more useful Git commands but we are not going to review all of them. A (not-comprehensive) list: 
+As you can imagine, there are several more useful Git commands but, we are not going to review all of them. A (not-comprehensive) list: 
 \begin{itemize}
 \itemsep 2ex
 \item \texttt{git rm}: remove a file from Git (see also previous messages); 
 \item \texttt{git mv}: record a file movement; 
 \item \texttt{git log}: explore the commits' history.
 \end{itemize}
-During the next units, we will explore \texttt{git blame} and \texttt{git bisect} (which are useful for debugging Git projects). 
+During the next units, we might explore \texttt{git blame} and \texttt{git bisect} (which are useful for debugging Git projects). 
 \end{frame}
 
 \begin{frame}{Github!}
@@ -573,7 +572,7 @@ Now, let's delete the Git repo (after pushing the new commit) and repeat the sam
 \item Open Rstudio and Click on ``Create a Project"; 
 \item Select Version Control -> Git and copy the URL from Github. Then click on Create Project. 
 \end{enumerate}
-The output is a Git folder with the same file(s) as before. Now, it includes also an \texttt{.Rproj} (and extra) files. Finally 
+The output is a Git folder with the same file(s) as before. It might also include \texttt{.Rproj/.gitignore} files. Finally 
 \begin{enumerate}
 \item explore the new (automatically-defined) \texttt{.gitignore} file;
 \item create a new \texttt{.R} file and commit with the Git control panel.
@@ -584,14 +583,14 @@ The output is a Git folder with the same file(s) as before. Now, it includes als
 \vspace{-0.5cm}
 \begin{itemize}
 \itemsep 2ex
-\item As you can imagine, there is nothing special with Github and we can use a similar process to connect a local Git repo with other hosting service (e.g. Gitlab) and other remotes.  
-\item The command \texttt{git remote} can list the remotes: 
+\item There is nothing special with Github and we can use a similar process to connect a local Git repo with other hosting service (e.g. Gitlab). 
+\item The command \texttt{git remote} can list the remotes accesses for our repository. The \texttt{-v} stands for \texttt{verbose}. 
 \begin{lstlisting}
 $ git remote -v
 origin  https://github.com/agila5/R4DS-PhD-Unimib.git (fetch)
 origin  https://github.com/agila5/R4DS-PhD-Unimib.git (push)
 \end{lstlisting}
-\item See \url{https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes} for more details. We will also re-examine this topic when we talk about branches. 
+\item See \url{https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes} for more details. We will also re-examine this topic when we talk about R packages. 
 \end{itemize}
 \end{frame}
 
