@@ -173,7 +173,7 @@ int_end(my_interval)
 From that point, you may also create a **seq**uence of Days and then...
 :::
 
-2. **(Difficult)** Unfortunately, I'm much more lazy than that and I'm also getting old, so I can barely link dates and weekdays... Therefore, you need to further help me extending the `statsAndBooze` package to allow the specification of weekdays instead of numerical dates! For example, suppose that today is April 5th, 2023 (i.e. the last day of classes together) and we know it's Wednesday. Then, if we assume that I will be up for a beer onThursday and Friday, the `parse_dates()` function should automatically convert those strings into the corresponding Dates:
+2. **(Difficult)** Unfortunately, I'm much more lazy than that and I'm also getting old, so I can barely link dates and weekdays... Therefore, you need to further help me extending the `statsAndBooze` package to allow the specification of weekdays instead of numerical dates! For example, suppose that today is April 5th, 2023 (i.e. the last day of classes together) and we know it's Wednesday. Then, if we assume that I will be up for a beer on Thursday and Friday, the `parse_dates()` function should automatically convert those strings into the corresponding Dates:
 
 ```{r}
 #| eval: false
