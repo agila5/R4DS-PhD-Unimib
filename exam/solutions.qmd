@@ -1,0 +1,591 @@
+---
+title: "R for Data Science - Final exam (Solutions)"
+subtitle: "University of Milano - Bicocca, Department of Economics, Management and Statistics"
+author: "Andrea Gilardi"
+date: today
+format: 
+  pdf:
+    cite-method: biblatex
+    biblatexoptions: [style=authoryear-comp, maxcitenames=1, uniquelist=false, sorting=ynt, maxbibnames=99]
+    include-in-header: 
+      - text: |
+          \usepackage{emoji}
+pdf-engine: lualatex
+callout-appearance: minimal
+geometry:
+  - margin=0.8in
+  - footskip=.25in
+knitr:
+  opts_chunk: 
+    collapse: true
+bibliography: solutions-refs.bib
+nocite: |
+  @*
+---
+
+```{r}
+#| include: false
+if (!interactive()) {
+  options(width = 80, pillar.print_min = 6L) 
+}
+
+# save the built-in output hook
+hook_output <- knitr::knit_hooks$get("output")
+
+# set a new output hook to truncate text output
+knitr::knit_hooks$set(output = function(x, options) {
+  if (!is.null(n <- options$out.lines)) {
+    x <- xfun::split_lines(x)
+    if (length(x) > n) {
+      # truncate the output
+      x <- c(head(x, n), "....\n")
+    }
+    x <- paste(x, collapse = "\n")
+  }
+  hook_output(x, options)
+})
+```
+
+# Exercise 1 - Exploratory Data Analysis (12pt)
+
+The `covfefe_chat.txt` file (that I sent to each one of you by email) includes a copy of the text messages exchanged in the Covfefe Whatsapp group during the last few months. The file was saved using the "Whatsapp Text Data" format and can be conveniently read into R as follows: 
+  
+```{r}
+library(rwhatsapp)
+covfefe_chat <- rwa_read(
+  here::here("exam", "covfefe_chat.txt"), 
+  encoding = "UTF-8"
+)
+```
+
+::: {.callout-tip title="Whatsapp text data analysis in R"}
+The [vignette](https://cran.r-project.org/web/packages/rwhatsapp/vignettes/Text_Analysis_using_WhatsApp_data.html) of the R package `rwhatsapp` provides a great introduction to the analysis of whatsapp text data. You might want to read it to get inspiration on how to solve the following exercises. 
+:::
+
+If we check the structure of the dataset
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+glimpse(covfefe_chat)
+```
+
+we can see that there are 1610 rows and 6 column with a quite descriptive name.  
+
+Using the Covfefe dataset, answer the following questions: 
+
+1. Who sent the highest number of messages? 
+
+::: {.callout-note title="Solution"}
+```{r}
+covfefe_chat |> count(author, sort = TRUE)
+```
+
+Andrea Gilardi (\emoji{grimacing-face}) sent the highest number of messages during the considered period. 
+:::
+
+2. How many messages were exchanged during December 2022? **Tip:** Check the functions exported by `lubridate` package if you need to extract the "month" from the `time` field 
+
+::: {.callout-note title="Solution"}
+```{r}
+library(lubridate, warn.conflicts = FALSE)
+covfefe_chat |> mutate(month = month(time)) |> filter(month == 12) |> nrow()
+```
+
+246 messages were exchanged during December 2022. 
+:::
+
+3. Who sent the first message of the current year? At which time?
+
+::: {.callout-note title="Solution"}
+```{r}
+covfefe_chat |> filter(year(time) >= 2023) |> slice_min(time)
+```
+
+The first message of the current year was sent by Andrea Gilardi (\emoji{see-no-evil-monkey}) on January 4th, 2023 at 15:08:30. 
+:::
+
+4. On which day did we exchange the highest number of messages? After filtering the corresponding text messages, check their content and try to explain the anomalous behaviour. 
+
+::: {.callout-note title="Solution"}
+```{r}
+covfefe_chat |> 
+  mutate(day = as_date(time)) |> 
+  count(day, sort = TRUE) |> 
+  slice_max(n)
+```
+
+The day in which we exchanged the highest number of messages is February 1st, 2023. If we check the content of those messages:
+
+```{r}
+covfefe_chat |> filter(as_date(time) == as.Date("2023-02-01"))
+```
+
+we can see that the participants were discussing about the organisation of an happy hour (to welcome Alessia Caponera) and, unfortunately, there were some problems to decide the final location. 
+:::
+
+5. How many messages are sent on average per day?
+
+::: {.callout-note title="Solution"}
+```{r}
+covfefe_chat |> summarise(
+  min_date = min(as_date(time)), 
+  max_date = max(as_date(time)), 
+  n_days = max_date - min_date, 
+  avg_num_messages = n() / as.numeric(n_days)
+)
+```
+
+If we consider the complete set of days in the period under analysis, then we can see that we sent, on average, 10.3 messages per day. On the other hand, if we consider only the days in which we exchanged at least one message
+
+```{r}
+covfefe_chat |> summarise(
+  nunique_days = length(unique(as_date(time))), 
+  avg_num_messages = n() / nunique_days
+)
+```
+
+then we can see that we sent, on average, 14.5 messages per day. 
+:::
+
+6. Who sent the highest number of messages which included at least one emoji? **Tip:** As we can see from the output of `glimpse()`, the `emoji` column is a `<list>` column. The following code can be used to select only the not-`NULL` values from a list-column named `col` in a dataset named `data`: `data |> filter(!vapply(col, is.null, logical(1)))`. 
+
+::: {.callout-note title="Solution"}
+```{r}
+covfefe_chat |> 
+  filter(!vapply(emoji, is.null, logical(1))) |> 
+  count(author, sort = TRUE)
+```
+
+The author who sent the highest number of messages which included at least one emoji is (one more time \emoji{man-facepalming} ...) Andrea Gilardi.
+:::
+
+7. **(Difficult)** Determine the most common emoji for each author. In case of ties, you can select any of the equally-used emojies. **Tip:** The `unnest()` function (which is defined in the R package `tidyr`) can be used to "unnest" a list column. See the corresponding help page and the vignette of `rwhatsapp` for more details. In any case, you don't need to "parse" the UTF-8 codes. 
+
+::: {.callout-note title="Solution"}
+```{r}
+library(tidyr)
+
+covfefe_chat |> 
+  filter(!vapply(emoji, is.null, logical(1))) |> 
+  select(author, emoji) |> 
+  unnest(emoji) |> 
+  group_by(author) |> 
+  count(emoji) |> 
+  slice_max(order_by = n, with_ties = FALSE)
+```
+
+If you want, you can run `View()` at the end of the pipe chain in an interactive Rstudio session to see the parsed emojies.
+:::
+
+8. **(More difficult)** Compute and display the total number of messages exchanged in the whatsapp chat after dividing the observations according to the hour of the day AND the day of the week. **Tip:** The function `tidyr::complete` can be used to fill the "implicit" missing values (i.e. those combinations of day and hour where no message was sent). Filling the 0 counts might help for the development of the visualisation.  
+
+::: {.callout-note title="Solution"}
+First, properly format the data. 
+```{r}
+datetime_nmessages <- covfefe_chat |> 
+  group_by(
+    dow = factor(
+      weekdays(time), 
+      levels = c(
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+      )
+    ), 
+    hour = factor(hour(time), levels = 0:23)
+  ) |> 
+  summarise(n = n(), .groups = "drop") |> 
+  complete(dow, hour, fill = list(n = 0L)) |> 
+  mutate(hour = as.numeric(levels(hour))[hour])
+```
+
+The following shows a possible visualisation
+
+```{r}
+library(ggplot2)
+ggplot(datetime_nmessages, aes(x = hour, y = n, group = dow, col = dow)) +
+  geom_line() + 
+  theme_light() + 
+  labs(
+    x = "Hour of the day", 
+    y = "Number of messages", 
+    col = "Day of the week"
+  )
+```
+:::
+
+```{r}
+#| include: false
+#| echo: false
+if (interactive()) {
+  rm(list = ls())
+  dev.off()
+}
+```
+
+# Exercise 2 - Debugging techniques (8pt)
+
+According to the official R documentation, the `termplot()` function can be used to plot the regression terms included in a linear model against their predictors (i.e. the product of $\hat{\beta}_j$ and $x_j$). So, for example, if we define a small simulation study such as
+
+```{r}
+set.seed(1)
+n <- 10L
+x1 <- rnorm(n)
+x2 <- seq.int(n)
+beta0 <- 0; beta1 <- 1; beta2 <- 2
+y <- beta0 + beta1 * x1 + beta2 * x2 + rnorm(n)
+```
+
+then we can obtain a least square estimate of $\beta_0$, $\beta_1$, and $\beta_2$ as follows
+
+```{r}
+(mod1 <- lm(y ~ x1 + x2))
+```
+
+and the following command plots $x_j$ vs $\hat{\beta}_jx_j, \, j = 1, 2$:
+  
+```{r}
+#| layout-ncol: 2 
+termplot(mod1, ask = FALSE, ylim = "free")
+```
+
+The `I()` function can be used inside a formula to stop the interpretation of its argument, indicating that it should be treated "as is". See also its help page for more details. Therefore, `mod1` can also be defined as follows:
+  
+```{r}
+(mod2 <- lm(y ~ x1 + I(1:n)))
+```
+
+Nevertheless, the following chunk of code shows that, in this second case, the `termplot` function returns an empty plot and a suspicious warning which is clearly misleading: 
+  
+```{r}
+#| layout-ncol: 2 
+termplot(mod2, ask = FALSE, ylim = "free")
+```
+
+Questions:
+  
+1. Explain why `termplot()` raises a warning message when we pass `mod2` instead of `mod1` and the steps you took / the techniques you used to tackle this problem.
+
+::: {.callout-note title="Solution"}
+The warning message is erroneously raised by the following piece of code 
+
+```{r}
+strwrap(body(termplot)[[11]])
+```
+
+In particular, the object `nmt` inside `grepl()` is defined as 
+
+```{r}
+body(termplot)[[10]]
+```
+
+whereas `tms` is defined in 
+
+```{r}
+body(termplot)[[4]]
+```
+
+According to the official documentation and the function's definition, `terms` is a dataframe-like object that contains the predicted values for the chosen term(s) and `nmt` are the `colnames` of `tms`, i.e. the names of the covariates included into the regression model (stored as a character vector). Therefore, we could argue that the creator of this function added the `if` clause to raise an informative warning message in case a user passed a model that includes interactions among covariates defined via the `:` operator (like `A:B`), probably because those are not correctly handled by `termplot()`. Unfortunately, the existing approach confuses the term `I(1:n)` as an interaction term and erroneously raises that same warning message.
+:::
+
+2. **(Difficult)** Explain why `termplot()` creates an empty plot when displaying the relationship between `x2 := 1:n` and its predicted values. 
+
+::: {.callout-note title="Solution"}
+The plots generated by `termplot()` are created within a for loop that iterates over the model's terms: 
+
+```{r}
+#| out.lines: 25
+body(termplot)[[34]]
+```
+
+In our case, `n.tms` is equal to 2 (since the regression model includes two terms), implying that the for loop runs for 2 times (one for each plot). Moreover, considering that we are not dealing with any factor covariate, the plots must be generated by the bottom part of the following call
+
+```{r}
+body(termplot)[[34]][[4]][[4]][[4]]
+```
+
+The result should always be a scatter plot (with dots connected by lines) where the x-axis is given by `xx[oo]` and the y-axis by `tms[oo, i]`. The object `xx` is generated by the `carrier()` function (see the beginning of the previous call), which is also defined inside the body of `termplot()` 
+
+```{r}
+body(termplot)[[18]]
+```
+
+The object `cn` (which is one of the input of `carrier()`) is given by 
+
+```{r}
+body(termplot)[[12]]
+```
+
+where, as we have already seen, `nmt` is a character vector that contains the (col)names of the chosen terms (`"x1"` and `"I(1:n)"` in our example) and, according to the official documentation, the function `str2expression()` converts the vector of (col)names into an expression object, like
+
+```{r}
+(cn <- str2expression(c("x1", "I(1:n)")))
+```
+
+More precisely, the first element of `cn` is a *symbol* or *name* object, which is a class of objects that represent a way to refer to other elements (`x1` in this case) by their name:
+
+```{r}
+cn[[1]]
+class(cn[[1]])
+```
+
+See also `?name` for more details. Looking at the previous tests, everything works fine when we process the first term. On the other hand, the second element of `cn` is an object of type `call`: 
+
+```{r}
+class(cn[[2]])
+```
+
+A `call` is a recursive type of objects that "represent the action of calling a function" [@wickham2019advanced]. In this case
+
+```{r}
+cn[[2]]
+class(cn[[2]])
+```
+
+The first element of each call is the function that gets called
+
+```{r}
+cn[[2]][[1]]
+```
+
+and the other elements are the arguments
+
+```{r}
+cn[[2]][[2]]
+```
+
+The length of a call is given by one plus the number of arguments provided to the function and, therefore, 
+
+```{r}
+length(cn[[2]]) 
+```
+
+For this reason, when the function `termplot()` runs `carrier(cn[[2]], FALSE)` to generate the second plot, the condition inside the if clause is evaluated as `TRUE` and the function recursively calls `carrier(cn[[2]][[2]], FALSE)` where `cn[[2]][[2]]` is the argument inside `I()` and it is also another `call` object.  
+
+```{r}
+cn[[2]][[2]]
+class(cn[[2]][[2]])
+```
+
+In fact, given the nature of the R language, `1:n` can be actually seen as a call object where the function `:` is applied with arguments `1` and `n`: 
+
+```{r}
+1:n
+`:`(1, n)
+```
+
+Therefore, `carrier(cn[[2]][[2]], FALSE)` recursively calls `carrier(cn[[2]][[2]][[2]], FALSE)` where `cn[[2]][[2]][[2]]` is just the first argument passed to the function `:` i.e. 1: 
+
+```{r}
+cn[[2]][[2]][[2]]
+```
+
+Finally, the nested object returned by `cn[[2]][[2]][[2]]` is not a call object 
+
+```{r}
+class(cn[[2]][[2]][[2]])
+```
+
+and `xx` is computed as `eval(1, data, encols = pf)` which simply evaluates to 1 since 1 is a constant numeric value. Therefore, all the subsequent steps (e.g. `range()`, `order()`, ...) run in an erroneous/pathological way and produce a plot which is just a point centred in x = 1. 
+:::
+
+```{r}
+#| include: false
+#| echo: false
+if (interactive()) {
+  rm(list = ls())
+  dev.off()
+}
+```
+
+# Exercise 3 - R packages (16pt)
+
+During the last two classes of our course we developed a small R package named `statsAndBooze` that can be used to perform the following task: 
+
+```{r}
+library(statsAndBooze)
+
+# Which days are you available to have a beer? 
+beer_dates_string <- list(
+  andrea = c("2023-04-04", "2023-04-05"),
+  federico = "2023-04-04"
+)
+
+# Convert strings to Date(s)
+beer_dates <- parse_dates(beer_dates_string)
+decide_happy_hour(beer_dates)
+```
+
+Now you are required to extend the currently-existing functionalities in the following ways! 
+
+1. As you may already know, I love beer and, more importantly, I'm a lazy guy... So, I'm (almost) always available to have a beer but I really don't want to manually enter all the single dates into the R script :( Therefore, now you have to extend the `parse_dates` function to allow the specification of time intervals instead of single dates. So, for example, given the following input
+
+```{r}
+#| eval: false
+beer_dates_string <- list(
+  andrea = c("2023-04-01", "2023-04-03 / 2023-04-05"),
+  federico = "2023-04-04"
+)
+```
+
+our package should return something along these lines
+
+```{r}
+#| eval: false 
+parse_dates(beer_dates_string)
+# $andrea
+# [1] "2023-04-01", "2023-04-03", "2023-04-04", "2023-04-05"
+
+# $federico
+# [1] "2023-04-04"
+```
+Please notice that each element of the list should be a vector of Dates! 
+
+::: {.callout-tip title="Date Intervals in R"}
+The R package `lubridate` implements a class of objects named Interval(s). So, for example, the following code creates and prints a time interval that starts on April 3rd, 2023 and finishes on April 5th, 2023. 
+```{r}
+library(lubridate, warn.conflicts = FALSE)
+(my_interval <- interval("2023-04-03 / 2023-04-05"))
+```
+Given an `Interval` object you can also access the boundary points: 
+```{r}
+int_start(my_interval)
+int_end(my_interval)
+```
+From that point, you may also create a **seq**uence of Days and then...
+:::
+
+::: {.callout-note title="Solution"}
+The R function that we defined together in class was coded as follows: 
+
+```{r}
+#| eval: false
+parse_dates <- function(x) {
+  lapply(x, lubridate::as_date)
+}
+```
+
+so that 
+
+```{r}
+beer_dates_string <- list(
+  andrea = c("2023-04-04", "2023-04-05"),
+  federico = "2023-04-04"
+)
+parse_dates(beer_dates_string)
+```
+
+The following code chunk presents a possible way to extend the previous approach to accommodate the request of this exercise. First we need to load the relevant function (which must be added as an Import to the package)
+
+```{r}
+library(lubridate)
+```
+
+then we can defined a utility function 
+
+```{r}
+interval_to_date_sequence <- function(x) {
+  x <- interval(x)
+  if (identical(int_length(x), numeric(0))) {
+    return(numeric(0))
+  }
+  seq(int_start(x), int_end(x), by = "day")
+}
+```
+
+and finally we can mix everything together expanding the previous version of `parse_dates()`: 
+
+```{r}
+parse_dates_v2 <- function(x) {
+  lapply(
+    X = x, 
+    FUN = function(x) {
+      looks_like_interval <- grepl("/", x, fixed = TRUE)
+      out_interval <- interval_to_date_sequence(x[looks_like_interval])
+      out_date <- as_date(x[! looks_like_interval])
+      c(out_date, out_interval)
+    }
+  )
+}
+```
+
+We can see that 
+
+```{r}
+beer_dates_string <- list(
+  andrea = c("2023-04-01", "2023-04-03 / 2023-04-05"),
+  federico = "2023-04-04"
+)
+parse_dates_v2(beer_dates_string)
+```
+
+The (possibly unexported) function `interval_to_date_sequence()` can be defined in a file named `utils.R`. 
+:::
+
+2. **(Difficult)** Unfortunately, I'm much more lazy than that and I'm also getting old, so I can barely link dates and weekdays... Therefore, you need to further help me extending the `statsAndBooze` package to allow the specification of weekdays instead of numerical dates! For example, suppose that today is April 5th, 2023 (i.e. the last day of classes together) and we know it's Wednesday. Then, if we assume that I will be up for a beer on Thursday and Friday, the `parse_dates()` function should automatically convert those strings into the corresponding Dates:
+
+```{r}
+#| eval: false
+beer_dates_string <- list(
+  andrea = c("thursday", "friday"),
+  federico = "2023-04-05"
+)
+parse_dates(beer_dates_string)
+# $andrea
+# [1] "2023-04-06", "2023-04-07"
+
+# $federico
+# [1] "2023-04-05"
+```
+
+::: {.callout-important title="Restriction"}
+If you want, you can assume that the strings indicating the names of the weekdays refer to the subsequent 7 days with respect to the current date when we run the `parse_date()` function.  
+:::
+
+::: {.callout-note title="Solution"}
+Following the same spirit as before, we can improve the existing approach as follows: 
+
+```{r}
+weekday_to_date <- function(x) {
+  weekdays <- c(
+    "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
+  )
+  wday_now <- wday(today())
+  wday_x <- match(x, weekdays) 
+  # match(., .) returns the index position of the match
+  days_diff <- (wday_x - wday_now) %% 7L 
+  # we need to perform operations modulo 7 (e.g. -1 mod 7 = 6 mod 7)
+  today() + days_diff
+}
+
+parse_dates_v3 <- function(x) {
+  lapply(
+    X = x, 
+    FUN = function(x) {
+      looks_like_character_weekday <- grepl("[:alpha:]", x)
+      looks_like_interval <- grepl("/", x, fixed = TRUE)
+      
+      out_weekday <- weekday_to_date(x[looks_like_character_weekday])
+      out_interval <- interval_to_date_sequence(x[looks_like_interval])
+      out_date <- as_date(x[! (looks_like_interval | looks_like_character_weekday)])
+      
+      c(out_date, out_interval, out_weekday)
+    }
+  )
+}
+```
+
+such that
+
+```{r}
+beer_dates_string <- list(
+  andrea = c("2023-05-04", "friday", "monday"),
+  federico = c("2023-04-05", "2023-05-01 / 2023-05-05")
+)
+parse_dates_v3(beer_dates_string)
+```
+
+The `weekday_to_date()` function could be defined in an ad-hoc `temporal-conversion.R` file or something similar. Moreover, the sequence of `looks_like_*` tests could be defined using alternative approaches (if/else, switch, case_when, ...). 
+:::
+
+3. At the end, you need to showcase the functionalities we developed together and the new ones [creating](https://r-pkgs.org/whole-game.html#use_readme_rmd) a **beautiful** README file. If you need inspiration, see also [here](https://github.com/ropensci/osmdata). Please notice that you just need to explain the installation process of your package and present its basic functionalities (i.e. the ones we coded together and the new ones). 
+
+\newrefcontext[sorting=nty]
