@@ -1,0 +1,186 @@
+% !TeX program = lualatex
+
+% setup
+\documentclass[
+hyperref={bookmarks=false},
+xcolor={dvipsnames,svgnames*,x11names*}, 
+12pt
+]{beamer}
+\usepackage{../beamertheme/beamerinnerthemetb}
+\usepackage{../beamertheme/beamerouterthemetb}
+\usepackage{../beamertheme/beamercolorthemetb}
+\usepackage{../beamertheme/beamerthemetb}
+
+% packages
+\usepackage{emoji}
+\usepackage{graphicx}
+\usepackage{xurl}
+\usepackage{epigraph}
+\setlength\epigraphwidth{\linewidth}
+
+% options
+\setlength{\leftmargini}{0.08cm}
+\hypersetup{
+	pdfauthor={Andrea Gilardi},
+	colorlinks=true,
+	urlcolor=Blue
+}
+
+% metadata
+\title{R4DS - Unit 2: Debugging}
+\author{Andrea Gilardi}
+\date{\today}
+
+%%% Define new stuff for slide numbers
+\setbeamertemplate{navigation symbols}{}
+
+\pgfkeys{/visual counter/.cd,
+	thickness/.store in=\thickness,
+	thickness=0.4ex,
+	radius/.store in=\radius,
+	radius=1.5ex,
+	segment distance/.store in=\segdist,
+	segment distance=8,
+	color current frame/.store in=\colcurrframe,
+	color current frame=orange,
+	color old frame/.store in=\cololdframe,
+	color old frame=blue,
+	color next frame/.store in=\colnextframe,
+	color next frame=gray!30,
+	color page number/.store in=\colpagenum,
+	color page number=white,
+	current value/.store in=\currentv,
+	current value=1,
+	total value/.store in=\totalv,
+	total value=2,
+	circled page number/.code={
+		\begin{tikzpicture}[fill color/.style={}]
+			\pgfkeys{/visual counter/.cd, 
+				current value=\insertframenumber,
+				total value=\inserttotalframenumber,
+			}
+			\pgfmathtruncatemacro\current{\currentv+1}
+			\def\tot{\totalv}
+			\def\radiusout{\radius}
+			\def\radiusin{\radius-\thickness}
+			
+			\foreach \s in {1,...,\tot}
+			{
+				\ifnum\s>\current%
+				\tikzset{fill color/.append style={\colnextframe}}%
+				\fi%
+				\ifnum\s=\current%
+				\tikzset{fill color/.append style={\colcurrframe}}%
+				\fi%
+				\ifnum\s<\current%
+				\tikzset{fill color/.append style={\cololdframe}}%
+				\fi%
+				\fill[fill color]
+				({90-360/\tot * (\s - 1)-\segdist}:\radiusout) arc 
+				({90-360/\tot * (\s - 1)-\segdist}:{90-360/\tot * (\s)+\segdist}:\radiusout) --
+				({90-360/\tot * (\s)+\segdist}:\radiusin) arc 
+				({90-360/\tot * (\s)+\segdist}:{90-360/\tot * (\s - 1)-\segdist}:\radiusin);
+				% new addition
+				\node[inner sep=0pt,text=\colpagenum] at (0,0){\insertframenumber};
+			}
+		\end{tikzpicture}
+	},
+}
+
+\setbeamertemplate{footline}{
+	\begin{beamercolorbox}[wd=0.95\textwidth, ht=2ex,dp=1ex,sep=1ex]{footline}
+		\hfill%
+		\tikz\node[/visual counter/.cd,
+		segment distance=-2pt,
+		radius=0.33cm, thickness=0.33cm,
+		color old frame=black,
+		color current frame=black!80!gray!50,
+		color next frame=black!80!gray!50,
+		circled page number,
+		]{};
+	\end{beamercolorbox}
+}
+%%% End stuff for slide numbers
+
+\begin{document}
+\inserttitlepage
+
+\begin{frame}{Outline and main concepts}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 3ex
+\item The objective of this unit is to learn the basic tools for debugging R code using R and Rstudio. 
+\item We will start with a little of theory and then I will introduce the most common approaches with a series of example. 
+\item At the end, we will just briefly recall the main venues that can be consulted when asking for help and the best practices required to interact with those systems.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{But first...}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item Let's start with a quote by \href{https://heather.cs.ucdavis.edu/matloff.html}{Norm Matloff}: \emph{``Finding your bug is a process of confirming the many things that you believe are true — until you find one which is not true"}\dots
+\item which let me introduce our \textbf{best} programming companion: \href{https://en.wikipedia.org/wiki/Rubber_duck_debugging}{the debugging duck}!
+\end{itemize}
+\begin{figure}
+\centering
+\includegraphics[width=0.36\linewidth]{figures/rubber-duck-assisting-with-debugging}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Rubber Duck Debugging}
+\vspace{-0.5cm}
+{\small
+\begin{enumerate}
+\item Beg, borrow, steal, buy, fabricate or otherwise obtain a rubber duck (bathtub variety).
+\item Place rubber duck on desk and inform it you are just going to go over some code with it, if that’s all right.
+\item Explain to the duck what your code is supposed to do, and then go into detail and explain your code line by line.
+\item At some point you will tell the duck what you are doing next and then realise that that is not in fact what you are actually doing. The duck will sit there serenely, happy in the knowledge that it has helped you on your way.
+\end{enumerate}
+}
+\end{frame}
+
+\begin{frame}{Just to be a little more concrete...}
+\vspace{-0.5cm}
+Now we are going to review the following functions: 
+\begin{itemize}
+\itemsep 3ex
+\item \texttt{traceback():} Inspect the call stack;
+\item \texttt{browser():} Manually enter into debug state;
+\item \texttt{debug(): } Set the debug state for any function;
+\item \texttt{try() + tryCatch(): } Condition handling! 
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\vspace{2cm}
+	\begin{center}
+		\Huge
+		\textbf{Enough theory, let's start coding \emoji{partying-face}}
+	\end{center}
+\end{frame}
+
+\begin{frame}{And if I cannot debug my code? }
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item You need to ask for help! \textit{But where?} \emoji{loudly-crying-face}
+\item Google your problem! Maybe you are lucky,  \href{https://imgs.xkcd.com/comics/wisdom_of_the_ancients.png}{usually no}... 
+\item If you face a problem with a function in a contributed package, you should contact its maintainer and, whenever possible, raise an issue in the corresponding github repo. 
+\item If you have a generic programming question, you can ask it in several forums (e.g. \href{https://stackoverflow.com/questions/tagged/r}{SO}) or \href{https://www.r-project.org/mail.html}{mailing lists}.
+\item In any case, please remember that the people maintaining the software and the package are volunteers and you should present your problem in the best possible format (see also \texttt{fortunes::fortune(107)} and \href{https://stackoverflow.com/questions/5963269/how-to-make-a-great-r-reproducible-example}{this} SO thread). 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\texttt{reprex::reprex()}}
+\vspace{-0.5cm}
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{figures/reprex.png}
+\end{figure}
+\textbf{Source: } \url{https://reprex.tidyverse.org/}.
+\end{frame}
+
+% To receive useful feedback, please provide the complete context of the problem, including a reprex. The purpose of a reprex, or reproducible example1, is to eliminate the knowledge gaps, misunderstandings, and hidden assumptions where bugs hide. A reprex is a sample of complete, self-contained, runnable code that fully emulates and reproduces the problem. The code should look clean and readable, be as short and concise as possible, run in as few seconds as possible, and contain only the details most relevant to troubleshooting. You can embed the code inline in your question, or you can upload it to a public repository and post the link. Regardless, please expect that anyone trying to help will read all the code and run the enclosed _targets.R file on their own private computer. Please make this utterly empirical process as quick and easy as possible for the people who volunteer their valuable time and energy to answer questions.
+
+\end{document}
