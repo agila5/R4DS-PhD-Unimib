@@ -60,7 +60,7 @@ rm(idx_nas)
 all(collision[["accident_year"]] == 2022)
 
 # or
-filter(collision, accident_year != 2021)
+filter(collision, accident_year != 2022)
 
 # More generally, the filter() verb (which is defined inside the dplyr package)
 # can be used to select the observations that satisfy a series of conditions
@@ -100,7 +100,7 @@ ncol(collision)
 
 # The pipe operator can be used to concatenate the mutate() and filter() steps
 collision |>
-  mutate(new_accident_index = paste0("2021", accident_reference)) |>
+  mutate(new_accident_index = paste0("2022", accident_reference)) |>
   filter(new_accident_index != accident_index)
 
 # NB1: Informally, we could say that the pipe takes everything on the "left" side
