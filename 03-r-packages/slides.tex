@@ -110,6 +110,7 @@ xcolor={dvipsnames,svgnames*,x11names*},
 }
 %% End stuff for slide numbers
 
+
 % metadata
 \title{R4DS - Unit 3: R Packages}
 \author{Andrea Gilardi}
@@ -538,4 +539,163 @@ decide_happy_hour(parsed_dates)
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]{Unit testing}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item The example reported in the previous slide informally shows that our R package works in a particular case. 
+\item Now we want to formalise our expectations into \textbf{unit tests}!
+\item Why do we need unit testing? Two main reasons: 
+\begin{enumerate}
+\itemsep 1ex
+\item We might want to test what happens with wrong inputs or other edge cases that can remain hidden for the end users;
+\item We want to ensure that all aspects of our package keep working even after refactoring its main functionalities. 
+\end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Unit testing (cont)}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 1ex
+\item After loading \texttt{devtools}, you can run \texttt{use\_testthat()} to setup the unit testing environment. 
+\begin{lstlisting}
+> use_testthat()
+|\textcolor{gray}{v Setting active project to 'D:/git/statsAndBooze'}|
+|\textcolor{gray}{v Adding 'testthat' to Suggests field in DESCRIPTION}|
+|\textcolor{gray}{v Setting Config/testthat/edition field in DESCRIPTION to '3'}|
+|\textcolor{gray}{v Creating 'tests/testthat/'}|
+|\textcolor{gray}{v Writing 'tests/testthat.R'}|
+|\textcolor{gray}{* Call `use\_test()` to initialize a basic test file and open it for editing.}|
+\end{lstlisting}
+\item Then, we can run \texttt{use\_test(\textcolor{Rstring}{<file>})} to create a new test file. So, for example, I can run \texttt{use\_test(\textcolor{Rstring}{"parse"})}. 
+\begin{lstlisting}
+> use_test("parse")
+|\textcolor{gray}{v Writing 'tests/testthat/test-parse.R'}|
+|\textcolor{gray}{* Modify 'tests/testthat/test-parse.R'}|
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Unit testing (cont)}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item Now we need to edit the newly created file and write our unit test(s). First, we need to provide a short sentence that summarises the objective of the test. For example
+\begin{lstlisting}
+test_that(|\textcolor{Rstring}{"parse\_dates(): basic functionalities work"}|, {
+  expect_equal(2 * 2, 4)
+})
+\end{lstlisting}
+\item The tests are actually run using the R package \texttt{testthat} which exports several helper functions (\texttt{expect\_length()}, \texttt{expect\_message()}, \texttt{expect\_error()}, \dots) to test different aspects of our package (equality, differences, \dots).
+\item Then, we need to write the corpus of the test comparing observed output and our expectation. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Unit testing (cont)}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item For example: 
+\begin{lstlisting}
+test_that(|\textcolor{Rstring}{"parse\_dates(): basic functionalities work"}|, {
+  input_strings <- list(
+    andrea = |\textcolor{Rstring}{"2023-04-03"}|,
+    marco = |\textcolor{Rstring}{"2023-04-03"}|
+  )
+  expected_dates <- list(
+    andrea = lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|),
+    marco = lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|)
+  )
+  expect_equal(parse_dates(input_strings), expected_dates)
+})
+\end{lstlisting}
+\item After loading the package (\texttt{load\_all()}), we can run the new test interactively as any other R function. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Unit testing (cont)}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item The same procedure can be repeated for the other function
+\begin{lstlisting}
+> use_test(|\textcolor{Rstring}{"decide"}|)
+|\textcolor{gray}{v Setting active project to 'D:/git/statsAndBooze'}|
+|\textcolor{gray}{v Writing 'tests/testthat/test-decide.R'}|
+|\textcolor{gray}{* Modify 'tests/testthat/test-decide.R'}|
+\end{lstlisting}
+\item The actual test might look like
+\begin{lstlisting}
+test_that(|\textcolor{Rstring}{"decide\_happy\_hour(): basic functionalities work"}|, {
+  beer_dates <- list(
+    andrea = lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|),
+	federico = lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|),
+	chiara = lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|)
+  )
+  expect_equal(
+    decide_happy_hour(beer_dates), 
+	lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|)
+  )
+})
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Unit testing (cont)}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 1ex
+\item You should also test some pathological cases which might not be directly exposed to the regular end users
+\begin{lstlisting}
+test_that(|\textcolor{Rstring}{"decide\_happy\_hour(): empty intersection"}|, {
+  beer_dates <- list(
+    andrea = lubridate::as_date(|\textcolor{Rstring}{"2023-04-03"}|),
+	marco = lubridate::as_date(|\textcolor{Rstring}{"2023-04-04"}|)
+  )
+  expect_equal(
+    decide_happy_hour(beer_dates),
+	lubridate::as_date(numeric(|\textcolor{blue}{0}|))
+  )
+})
+\end{lstlisting}
+\item Similarly, you could develop a test to control the behaviour of the function in case of misspecified inputs. 
+\item For example: what is the expected output when one or more of the input Date(s) is NA?
+\end{itemize}
+\end{frame}
+
+\lstset{escapechar={£}}
+
+\begin{frame}[fragile]{Unit testing (cont)}
+\vspace{-0.5cm}
+\begin{itemize}
+\itemsep 2ex
+\item The function \texttt{test()} (which is also defined in \texttt{devtools}) automatically runs all tests in a package and returns an informative output (with a funny comment on the results)
+\begin{lstlisting}
+> test()
+i Testing statsAndBooze
+v | F W S  OK | Context
+v |         2 | decide
+v |         1 | parse
+	
+== Results ===============================
+Duration: 0.5 s
+		
+[ FAIL 0 | WARN 0 | SKIP 0 | £\textcolor{Rcomment}{PASS}£ 3 ] 
+		
+£\textcolor{Rcomment}{You are a coding rockstar!}£
+\end{lstlisting}
+\item The same behaviour occurs when you run R CMD check.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\vspace{2cm}
+\begin{center}
+\Huge
+\textbf{THE END!}
+\end{center}
+\vspace{1.5cm}
+\epigraph{E quindi uscimmo a riveder le stelle}{Dante Alighieri, Inferno XXXIV, 139}
+\end{frame}
 \end{document}
